@@ -1,55 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:pokemon_bloc_demo/bloc/bloc.dart';
 import 'package:pokemon_bloc_demo/model/Pokemon.dart';
 import 'package:pokemon_bloc_demo/network/PokemonAPI.dart';
 
-class PokemonList extends StatefulWidget {
-  @override
-  _PokemonListState createState() => _PokemonListState();
-}
-
-class _PokemonListState extends State<PokemonList> {
+class PokemonListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    performGetPokemonEvent(context);
     return Scaffold(
       appBar: AppBar(
         title: Text('Pokemon'),
         bottom: PreferredSize(
-            preferredSize: Size(double.infinity, 1.0), child: buildLoading()),
-      ),
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            child: Container(
-              child: GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                ),
-                itemBuilder: (context, index) => PokemonItem(
-//                  pokemonName: pokemonList[index].name,
-//                  imageUrl: pokemonList[index].imageUrl,
-                    ),
-              ),
-            ),
+          preferredSize: Size(double.infinity, 1.0),
+          child: BlocBuilder<PokemonBloc, PokemonState>(
+            builder: (context, state) {
+              if (state is PokemonLoading) {
+                return buildLoading();
+              }
+              return Container(
+                width: 0,
+                height: 0,
+              );
+            },
           ),
-        ],
+        ),
+      ),
+      body: BlocBuilder<PokemonBloc, PokemonState>(
+        builder: (context, state) {
+          if (state is PokemonInitial)
+            return Center(
+              child: Text('Initial'),
+            );
+          else if (state is PokemonData) {
+            return buildGridView(pokemonList: state.pokemonList);
+          } else
+            return Center(
+              child: Text('Initial'),
+            );
+        },
       ),
     );
   }
 }
 
-Widget buildLoading() {
-  return Center(
-    child: LinearProgressIndicator(
-      valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
-    ),
-  );
-}
-
 class PokemonItem extends StatelessWidget {
-  final String pokemonName;
-  final String imageUrl;
+  final Pokemon pokemon;
 
-  PokemonItem({this.pokemonName, this.imageUrl});
+  PokemonItem({this.pokemon});
 
   @override
   Widget build(BuildContext context) {
@@ -58,15 +56,37 @@ class PokemonItem extends StatelessWidget {
       child: Column(
         children: <Widget>[
           Expanded(
-            child: Image.asset('images/gin.png'),
+            child: Image.network(pokemon.sprites.frontDefault),
             flex: 5,
           ),
           Expanded(
-            child: Text('AAA'),
+            child: Text(pokemon.name),
             flex: 2,
           ),
         ],
       ),
     );
   }
+}
+
+Widget buildLoading() => Center(
+      child: LinearProgressIndicator(
+        valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+      ),
+    );
+
+Widget buildGridView({List<Pokemon> pokemonList}) => GridView.builder(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+      ),
+      itemBuilder: (context, index) => PokemonItem(
+        pokemon: pokemonList[index],
+      ),
+      itemCount: pokemonList.length,
+    );
+
+void performGetPokemonEvent(BuildContext context) {
+  // ignore: close_sinks
+  final pokemonBloc = BlocProvider.of<PokemonBloc>(context);
+  pokemonBloc.add(GetPokemonEvent());
 }

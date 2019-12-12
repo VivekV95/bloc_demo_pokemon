@@ -14,7 +14,6 @@ class PokemonRepositoryImpl extends PokemonRepository {
   @override
   Future<List<Pokemon>> getPokemon() async {
     var data = pokemonAPI.getPokemon();
-    var i = 0;
     return data;
   }
 

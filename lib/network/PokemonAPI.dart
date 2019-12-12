@@ -17,11 +17,11 @@ class PokemonAPI {
     List<Pokemon> pokemonList = List();
     var allPokemonData = await getNetworkData(_BASE_URL);
     PokemonResponse pokemonResponse = PokemonResponse.fromJson(allPokemonData);
-    pokemonResponse.results.forEach((pokemonResult) async {
-      var singlePokemonData = await getNetworkData(pokemonResult.url);
+    for (int i = 0; i < pokemonResponse.results.length; i++) {
+      var singlePokemonData =
+          await getNetworkData(pokemonResponse.results[i].url);
       pokemonList.add(Pokemon.fromJson(singlePokemonData));
-    });
-    var i = 0;
+    }
     return pokemonList;
   }
 
